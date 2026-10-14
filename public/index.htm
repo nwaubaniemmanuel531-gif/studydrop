@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>StudyDrop: notes to quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3F1FF;--ink:#1B1A3A;--card:#fff;--accent:#3B2FE0;--onaccent:#fff;--hl:#FFE14D;--hltext:#1B1A3A;--muted:#5E5D82;--line:#D5D2F3;--good:#0F7A48;--bad:#C0392B;--goodbg:#DDF5E8;--badbg:#FBE1DD;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14132B;--ink:#F1F0FF;--card:#1F1E3F;--accent:#9A92FF;--onaccent:#14132B;--muted:#A9A8CE;--line:#37366B;--good:#6EE0A5;--bad:#FF8E80;--goodbg:#173B2D;--badbg:#472320}}
+:root[data-theme="dark"]{--bg:#14132B;--ink:#F1F0FF;--card:#1F1E3F;--accent:#9A92FF;--onaccent:#14132B;--muted:#A9A8CE;--line:#37366B;--good:#6EE0A5;--bad:#FF8E80;--goodbg:#173B2D;--badbg:#472320}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 "DM Sans",system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:28px 18px 56px}
+h1,h2{font-family:"Bricolage Grotesque","DM Sans",system-ui,sans-serif;letter-spacing:-.02em;line-height:1.05;margin:0}
+h1{font-size:clamp(34px,9vw,52px);font-weight:800}
+.sub{color:var(--muted);margin:12px 0 22px;max-width:46ch}
+textarea{width:100%;min-height:190px;resize:vertical;padding:14px;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:inherit}
+textarea:focus,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+select{padding:11px 12px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
+.go{flex:1;min-width:180px;padding:13px 18px;border:0;border-radius:12px;background:var(--accent);color:var(--onaccent);font:700 16px "DM Sans",sans-serif;cursor:pointer}
+.go:disabled{opacity:.55;cursor:wait}
+.msg{margin-top:14px;color:var(--muted)}
+.msg.err{color:var(--bad)}
+.left{font-size:14px;color:var(--muted);margin:10px 0 0}
+.share{margin-top:6px;padding:11px 16px;border:2px solid var(--accent);border-radius:12px;background:none;color:var(--ink);font:700 15px "DM Sans",sans-serif;cursor:pointer}
+#out{margin-top:30px}
+.tabs{display:flex;gap:6px;border-bottom:2px solid var(--line);margin-bottom:18px}
+.tab{padding:10px 14px;border:0;background:none;color:var(--muted);font:700 15px "DM Sans",sans-serif;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
+.fc{display:block;width:100%;text-align:left;margin:0 0 12px;padding:18px;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.fc .q{font-weight:700}
+.fc .a{display:none;margin-top:12px}
+.fc .a span{background:var(--hl);color:var(--hltext);padding:2px 6px;border-radius:4px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.fc[aria-expanded="true"] .a{display:block}
+.fc .hint{display:block;margin-top:8px;font-size:13px;color:var(--muted)}
+.fc[aria-expanded="true"] .hint{display:none}
+.qz{margin:0 0 22px}
+.qz h2{font-size:20px;margin-bottom:10px;line-height:1.2}
+.opt{display:block;width:100%;text-align:left;margin:0 0 8px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.opt.good{border-color:var(--good);background:var(--goodbg)}
+.opt.bad{border-color:var(--bad);background:var(--badbg)}
+.why{margin:6px 0 0;font-size:14px;color:var(--muted)}
+.score{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:8px 0;font-weight:700;z-index:2}
+ul.sum{padding-left:20px;margin:0}
+ul.sum li{margin-bottom:10px}
+@media (prefers-reduced-motion:no-preference){.opt,.fc,.go{transition:background .15s,border-color .15s}}
+</style>
+</head>
+<body>
+<main>
+<h1>Drop your notes. Get a study set.</h1>
+<p class="sub">Paste class notes and get flashcards, a practice quiz, and a quick summary in seconds.</p>
+<textarea id="notes" placeholder="Paste your notes here (a few paragraphs works best)" aria-label="Your notes"></textarea>
+<div class="row">
+<select id="count" aria-label="Number of items"><option value="5">5 items</option><option value="8" selected>8 items</option><option value="12">12 items</option></select>
+<button class="go" id="go">Make my study set</button>
+</div>
+<p class="left" id="left"></p>
+<p class="msg" id="msg" role="status"></p>
+<section id="out" hidden>
+<div class="tabs" role="tablist">
+<button class="tab" role="tab" data-t="fc" aria-selected="true">Flashcards</button>
+<button class="tab" role="tab" data-t="qz" aria-selected="false">Quiz</button>
+<button class="tab" role="tab" data-t="sm" aria-selected="false">Summary</button>
+</div>
+<button class="share" id="share">Share this set</button>
+<div style="height:14px"></div>
+<div id="fc"></div><div id="qz" hidden></div><div id="sm" hidden></div>
+</section>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+const LIMIT=5;let last=null;
+const day=()=>new Date().toISOString().slice(0,10);
+function used(){try{const u=JSON.parse(localStorage.getItem("sd_use")||"{}");return u.d===day()?u.n:0}catch(e){return 0}}
+function bump(){try{localStorage.setItem("sd_use",JSON.stringify({d:day(),n:used()+1}))}catch(e){}}
+function showLeft(){$("#left").textContent=Math.max(0,LIMIT-used())+" free study sets left today"}
+function setMsg(t,err){const m=$("#msg");m.textContent=t;m.className="msg"+(err?" err":"")}
+showLeft();
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===b));
+  ["fc","qz","sm"].forEach(id=>$("#"+id).hidden=id!==b.dataset.t)
+});
+$("#go").onclick=async()=>{
+  const notes=$("#notes").value.trim().slice(0,8000),n=+$("#count").value;
+  if(notes.length<80){setMsg("Paste at least a few lines of notes so there's enough to work with.",1);return}
+  if(used()>=LIMIT){setMsg("You've used today's 5 free sets. Come back tomorrow. Unlimited plans are coming soon.",1);return}
+  const btn=$("#go");btn.disabled=true;btn.textContent="Building...";setMsg("Reading your notes...");
+  try{
+    const r=await fetch("/.netlify/functions/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({notes,n})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||"failed");
+    last=d;bump();showLeft();render(d);setMsg("");
+  }catch(e){setMsg(e.message&&e.message.length<90?e.message:"Couldn't build that set. Check your notes and try again.",1)}
+  btn.disabled=false;btn.textContent="Make my study set";
+};
+$("#share").onclick=async()=>{
+  if(!last)return;
+  const t="My StudyDrop study set\n\n"+(last.flashcards||[]).map((c,i)=>(i+1)+". "+c.q+"\n   "+c.a).join("\n\n")+"\n\nMade with StudyDrop: "+location.href;
+  try{if(navigator.share){await navigator.share({title:"My study set",text:t})}else{await navigator.clipboard.writeText(t);setMsg("Copied. Paste it into WhatsApp or anywhere.")}}catch(e){}
+};
+function render(d){
+  const fc=$("#fc"),qz=$("#qz"),sm=$("#sm");fc.replaceChildren();qz.replaceChildren();sm.replaceChildren();
+  (d.flashcards||[]).forEach(c=>{
+    const b=el("button","fc");b.setAttribute("aria-expanded","false");
+    b.append(el("div","q",c.q));const a=el("div","a");a.append(el("span",null,c.a));b.append(a,el("span","hint","Tap to reveal"));
+    b.onclick=()=>b.setAttribute("aria-expanded",b.getAttribute("aria-expanded")!=="true");
+    fc.append(b)
+  });
+  let right=0,done=0;const quiz=d.quiz||[];
+  const sc=el("div","score","Score: 0 / "+quiz.length);qz.append(sc);
+  quiz.forEach(q=>{
+    const w=el("div","qz");w.append(el("h2",null,q.q));let locked=false;
+    const why=el("p","why");why.hidden=true;
+    (q.options||[]).forEach((o,i)=>{
+      const b=el("button","opt",o);
+      b.onclick=()=>{
+        if(locked)return;locked=true;done++;
+        const ok=i===q.answer;if(ok)right++;
+        b.classList.add(ok?"good":"bad");
+        if(!ok){const c=w.querySelectorAll(".opt")[q.answer];if(c)c.classList.add("good")}
+        why.textContent=(ok?"Correct. ":"Not quite. ")+(q.why||"");why.hidden=false;
+        sc.textContent="Score: "+right+" / "+quiz.length+(done===quiz.length?" (done)":"")
+      };
+      w.append(b)
+    });
+    w.append(why);qz.append(w)
+  });
+  const ul=el("ul","sum");(d.summary||[]).forEach(s=>ul.append(el("li",null,s)));sm.append(ul);
+  $("#out").hidden=false;
+  document.querySelector('.tab[data-t="fc"]').click();
+  $("#out").scrollIntoView({behavior:"smooth"})
+}
+</script>
+</body>
+</html>
