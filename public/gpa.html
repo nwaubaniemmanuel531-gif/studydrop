@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade & GPA Calculator</title>
+<style>
+:root{--bg:#F3F1FF;--ink:#1B1A3A;--card:#fff;--accent:#3B2FE0;--onaccent:#fff;--muted:#5E5D82;--line:#D5D2F3}
+@media (prefers-color-scheme:dark){:root{--bg:#14132B;--ink:#F1F0FF;--card:#1F1E3F;--accent:#9A92FF;--onaccent:#14132B;--muted:#A9A8CE;--line:#37366B}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif}
+main{max-width:560px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:32px;line-height:1.1;margin:0 0 6px}
+h2{font-size:20px;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}
+label{display:block;font-size:14px;color:var(--muted);margin:10px 0 4px}
+input,select{width:100%;padding:11px;border:2px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+.r{display:grid;grid-template-columns:1fr 90px 44px;gap:8px;margin-bottom:8px}
+.x{border:2px solid var(--line);border-radius:10px;background:none;color:var(--ink);font-size:20px;cursor:pointer}
+.add{margin-top:6px;padding:11px 14px;border:2px solid var(--accent);border-radius:10px;background:none;color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+.big{font-size:44px;font-weight:800;color:var(--accent);margin:12px 0 0}
+.out{margin-top:14px;font-weight:700}
+</style>
+</head>
+<body>
+<main>
+<h1>Grade &amp; GPA Calculator</h1>
+<p class="sub">Work out your GPA and what you need on your final exam.</p>
+
+<section class="card">
+<h2>GPA calculator</h2>
+<label for="scale">Grading scale</label>
+<select id="scale"><option value="5">5.0 scale (A=5)</option><option value="4">4.0 scale (A=4)</option></select>
+<label>Courses: grade and units</label>
+<div id="rows"></div>
+<button class="add" id="add">+ Add course</button>
+<div class="big" id="gpa">0.00</div>
+<div class="sub">GPA across <span id="units">0</span> units</div>
+</section>
+
+<section class="card">
+<h2>What do I need on the final?</h2>
+<label for="cur">Current grade (%)</label>
+<input id="cur" type="number" inputmode="decimal" placeholder="e.g. 62">
+<label for="w">Final exam counts for (%)</label>
+<input id="w" type="number" inputmode="decimal" placeholder="e.g. 60">
+<label for="tg">Grade you want (%)</label>
+<input id="tg" type="number" inputmode="decimal" placeholder="e.g. 70">
+<div class="out" id="fout">Fill in all three boxes.</div>
+</section>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const scales={5:{A:5,B:4,C:3,D:2,E:1,F:0},4:{A:4,B:3,C:2,D:1,F:0}};
+function fill(){
+  const sc=scales[$('#scale').value];
+  document.querySelectorAll('.g').forEach(s=>{
+    const cur=s.value;
+    s.innerHTML=Object.keys(sc).map(k=>'<option>'+k+'</option>').join('');
+    if(sc[cur]!==undefined)s.value=cur;
+  });
+}
+function calc(){
+  const sc=scales[$('#scale').value];let pts=0,un=0;
+  document.querySelectorAll('.r').forEach(r=>{
+    const u=+r.querySelector('.u').value||0;
+    pts+=sc[r.querySelector('.g').value]*u;un+=u;
+  });
+  $('#gpa').textContent=un?(pts/un).toFixed(2):'0.00';
+  $('#units').textContent=un;
+}
+function row(){
+  const d=document.createElement('div');d.className='r';
+  d.innerHTML='<select class="g"></select><input class="u" type="number" min="1" max="10" value="3" aria-label="Units"><button class="x" aria-label="Remove course">×</button>';
+  d.querySelector('.x').onclick=()=>{d.remove();calc()};
+  d.querySelector('.u').oninput=calc;
+  d.querySelector('.g').onchange=calc;
+  $('#rows').append(d);fill();calc();
+}
+function fin(){
+  const out=$('#fout');
+  if(!$('#cur').value||!$('#w').value||!$('#tg').value){out.textContent='Fill in all three boxes.';return}
+  const c=+$('#cur').value,w=+$('#w').value,t=+$('#tg').value;
+  if(w<=0||w>100){out.textContent='The final exam weight must be between 1 and 100.';return}
+  const need=(t-c*(1-w/100))/(w/100);
+  if(need>100)out.textContent='You would need '+need.toFixed(1)+'%, which is above 100%. Try a lower target.';
+  else if(need<=0)out.textContent='You already have enough. Even 0% keeps you at your target.';
+  else out.textContent='You need about '+need.toFixed(1)+'% on the final.';
+}
+$('#add').onclick=row;
+$('#scale').onchange=()=>{fill();calc()};
+['cur','w','tg'].forEach(id=>$('#'+id).oninput=fin);
+for(let i=0;i<4;i++)row();
+</script>
+</body>
+                              </html>
